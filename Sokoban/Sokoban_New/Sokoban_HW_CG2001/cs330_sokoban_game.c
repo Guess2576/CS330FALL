@@ -130,10 +130,35 @@ returns an int to represent whether this move is valid:
             push star into goal,
             push star off goal
 */
-int validMove(int direction, Player *p, int *map){
-    /* === TO DO === */
+int validMove(int direction, Player *p, int *map){                                               // The main purpose of the validMove function is to determine whether or not the player's move choice will be valid or invalid. For instance, if the player tries to move into a wall space, it will be invalid. Or if the player tries to move a star into a wall space or out of bounds, it will be invalid.
+     int newPlayerX = p->x + dX[direction];                                                      //The validMove function also moves the star over whenever the player moves into a star. 
+    int newPlayerY = p->y + dY[direction];
+    
+                                                                                                 // Checking to see if the new position is out of bounds
+    if (newPlayerX < 0 || newPlayerX >= MAP_COLS || newPlayerY < 0 || newPlayerY >= MAP_ROWS)
+        return 0;
+    
+    int newSquare = *((map + newPlayerY * MAP_COLS) + newPlayerX);
+    
+                                                                                                // Checking to see if the new position is a wall
+    if (newSquare == 1)
+        return 0;
+    
+                                                                                                // What to do if the new position is a star or a star on goal
+    if (newSquare == 3 || newSquare == 5) {
+        int newStarX = newPlayerX + dX[direction];
+        int newStarY = newPlayerY + dY[direction];
+        
+                                                                                                 // Checking to see if the square behind the star is out of bounds or a wall
+        if (newStarX < 0 || newStarX >= MAP_COLS || newStarY < 0 || newStarY >= MAP_ROWS ||
+            *((map + newStarY * MAP_COLS) + newStarX) == 1)
+            return 0;
+    }
+    
+    return 1;
     return 0;
-}  // end validMove
+}  
+                                                                                                // end validMove
 
 
 /* function won't be called unless we know it's a valid move
@@ -152,11 +177,51 @@ takes direction (of move), Player, and map
         (2.d) pushes star off goal and onto another goal
 returns: nothing
 */
-void movePlayer(int direction, Player *p, int *map){
-    /* === TO DO === */
 
-    return;
-}  // end movePlayer()
+void movePlayer(int direction, Player *p, int *map) {                                                    //The main purpose of the movePlayer function is to move the player icon around the map while updating each square on the map. For instance, if the player moves into a star, the player icon will need to take the place of the star icon and the star icon will need to move over one space (handled in validMove). 
+                                                                                                         // Calculate the new position of the player
+    int newPlayerX = p->x + dX[direction];
+    int newPlayerY = p->y + dY[direction];
+
+                                                                                                        // Update the previous square where the player was located
+    if (p->prevSquareValue == 4) {
+        *((map + p->y * MAP_COLS) + p->x) = 4;                                                          // Restore previous goal square
+    } else {
+        *((map + p->y * MAP_COLS) + p->x) = 0;                                                          // Restore previous empty square
+    }
+
+                                                                                                        // Check the type of the new square and update the map accordingly
+    int newSquare = *((map + newPlayerY * MAP_COLS) + newPlayerX);
+    if (newSquare == 3 || newSquare == 5) {
+                                                                                                        // The new square contains a star, handle pushing the star
+                                                                                                        // Update the previous star or goal square
+        if (newSquare == 3) {
+            *((map + newPlayerY * MAP_COLS) + newPlayerX) = 0;                                          // Restore previous star square
+        } else {
+            *((map + newPlayerY * MAP_COLS) + newPlayerX) = 4;                                          // Restore previous goal square
+        }
+
+                                                                                                        // Update the new position of the star
+        int newStarX = newPlayerX + dX[direction];
+        int newStarY = newPlayerY + dY[direction];
+                                                                                                        // Update the map with the new star position
+        if (*((map + newStarY * MAP_COLS) + newStarX) == 4) {
+            *((map + newStarY * MAP_COLS) + newStarX) = 5;                                              // Star on goal square
+            numStarsSolved++;                                                                           // Increment the number of solved stars
+        } else {
+            *((map + newStarY * MAP_COLS) + newStarX) = 3;                                              // Star on empty square
+        }
+    }
+
+                                                                                                        // Update the player's position
+    p->x = newPlayerX;
+    p->y = newPlayerY;
+
+    *((map + newPlayerY * MAP_COLS) + newPlayerX) = 2;
+                                                                                                        // Increment the number of steps
+    NUM_STEPS++;
+}
+                                                                                                        //end movePlayer
 
 /* ========== END TO DO FUNCTIONS ========== */
 
@@ -261,21 +326,21 @@ int main(){
         /* ======= TODO ======= */
 
         // if it's a valid move, move player (and star)
-        /* uncomment this section as you write the functions above
+
         if (validMove(delta, p, map)){
             // move player (and star)
             movePlayer(delta, p, map);
         }
-        */
+
         
 
         /* comment this section out and uncomment the section above
           NOTE:  There should be no TA_... in your code
         */
-        if (TA_validMove(delta, p, map)){
+        //if (TA_validMove(delta, p, map)){
             // move player (and star)
-            TA_movePlayer(delta, p, map);
-        }
+            //TA_movePlayer(delta, p, map);
+       // }
         
 
         /* ======= END TO DO ======= */
